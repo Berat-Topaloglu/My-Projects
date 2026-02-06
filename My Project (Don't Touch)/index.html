@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oda Temizlik ve Tefrişat Kontrolü</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="app-container">
+        <!-- Sidebar / History Panel -->
+        <aside class="history-sidebar glass-panel">
+            <div class="sidebar-header">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Geçmiş</h3>
+                <button id="clearHistoryBtn" class="icon-btn" title="Geçmişi Temizle"><i
+                        class="fa-solid fa-trash"></i></button>
+            </div>
+            <div id="historyList" class="history-list">
+                <!-- Geçmiş kayıtlar buraya gelecek -->
+                <div class="empty-state">Henüz kayıt yok</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <div class="header-content">
+                    <h1>Oda Kontrol Paneli</h1>
+                    <p class="subtitle">Temizlik ve Tefrişat Sistemi</p>
+                </div>
+
+                <div class="dashboard-stats glass-panel-sm">
+                    <div class="stat-item">
+                        <span class="stat-label">Tamamlanan</span>
+                        <span class="stat-value" id="completedCount">0/15</span>
+                    </div>
+                    <div class="progress-circle" id="progressCircle" style="--percent: 0">
+                        <span class="percent-text">0%</span>
+                    </div>
+                </div>
+
+                <div class="user-controls">
+                    <span id="welcomeUser" class="subtitle" style="margin-right: 10px;"></span>
+                    <button id="logoutBtn" class="action-btn sm"><i class="fa-solid fa-right-from-bracket"></i>
+                        Çıkış</button>
+                </div>
+            </header>
+
+            <!-- Admin Panel (Hidden by default) -->
+            <section id="adminPanel" class="input-section glass-panel hidden">
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-user-shield"></i> Yönetici Paneli</h2>
+                </div>
+
+                <div class="admin-grid">
+                    <!-- Add User -->
+                    <div class="admin-card glass-panel-sm">
+                        <h4>Yeni Kullanıcı Ekle</h4>
+                        <form id="addUserForm" class="admin-form form-grid-2">
+                            <input type="text" id="newUsername" placeholder="Kullanıcı Adı" required>
+                            <input type="text" id="newFullName" placeholder="İsim Soyisim" required>
+
+                            <input type="email" id="newEmail" placeholder="E-Posta Adresi" required class="full-span">
+
+                            <input type="tel" id="newPhone" placeholder="Telefon (555...)" required>
+                            <input type="date" id="newDob" required title="Doğum Tarihi">
+
+                            <div class="password-group">
+                                <input type="password" id="newPassword" placeholder="Şifre" required>
+                                <input type="password" id="confirmPassword" placeholder="Şifre Tekrar" required>
+                            </div>
+
+                            <select id="newRole" class="full-span">
+                                <option value="staff">Personel</option>
+                                <option value="admin">Yönetici</option>
+                            </select>
+
+                            <button type="submit" class="action-btn full-span">Ekle</button>
+                        </form>
+                    </div>
+
+                    <!-- Add Room Item -->
+                    <div class="admin-card glass-panel-sm">
+                        <h4>Yeni Oda Öğesi Ekle</h4>
+                        <form id="addItemForm" class="admin-form">
+                            <input type="text" id="newItemName" placeholder="Öğe Adı (örn: Ayna)" required>
+                            <button type="submit" class="action-btn">Ekle</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Founder Panel (Strictly Hidden) -->
+            <section id="founderPanel" class="input-section glass-panel founder-section hidden">
+                <div class="section-header founder-header">
+                    <h2><i class="fa-solid fa-crown"></i> Kurucu Paneli</h2>
+                </div>
+
+                <div class="admin-grid">
+                    <!-- Advanced User Management -->
+                    <div class="admin-card glass-panel-sm" style="grid-column: 1 / -1;">
+                        <div class="flex-between">
+                            <h4>Kullanıcı Yönetimi</h4>
+                            <button id="founderAddUserBtn" class="action-btn sm"><i class="fa-solid fa-plus"></i> Yeni
+                                Kullanıcı</button>
+                        </div>
+                        <div class="user-table-container">
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                        <th>Kullanıcı Adı</th>
+                                        <th>Rol</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userListBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <form id="controlForm">
+                <!-- Info Section -->
+                <section class="input-section glass-panel">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-hotel"></i> Görev Bilgileri</h2>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-wrapper">
+                            <label for="roomNo">Oda No</label>
+                            <input type="text" id="roomNo" placeholder="101" required autocomplete="off">
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="date">Tarih</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="time">Saat</label>
+                            <input type="time" id="time" required>
+                        </div>
+                    </div>
+                    <div class="input-wrapper full-width">
+                        <label for="notes">Ek Notlar</label>
+                        <textarea id="notes" rows="2" placeholder="Oda ile ilgili özel durumlar..."></textarea>
+                    </div>
+                </section>
+
+                <!-- Checklist Section -->
+                <section class="checklist-section glass-panel">
+                    <div class="section-header flex-between">
+                        <h2><i class="fa-solid fa-list-check"></i> Kontrol Listesi</h2>
+                        <button type="button" id="markAllDoneBtn" class="action-btn sm">
+                            <i class="fa-solid fa-check-double"></i> Hepsini Yapıldı İşaretle
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filter-bar">
+                        <div class="search-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Öğe ara...">
+                        </div>
+                        <div class="filter-buttons">
+                            <button type="button" class="filter-btn active" data-filter="all">Tümü</button>
+                            <button type="button" class="filter-btn" data-filter="incomplete">Tamamlanmadı</button>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div class="progress-fill" id="progressBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="checklist-container" id="checklistContainer">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                </section>
+
+                <button type="submit" class="submit-btn" id="saveBtn">
+                    <span>KAYDET VE ONAYLA</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <div class="confetti-canvas-container" id="confettiContainer"></div>
+            <div class="modal-body">
+                <div class="success-icon">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3>İşlem Başarılı!</h3>
+                <p>Oda kontrol kaydı sisteme işlendi.</p>
+                <div class="room-badge" id="modalRoomBadge">Oda 101</div>
+                <button id="closeModalBtn" class="primary-btn">Tamam</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <i class="fa-solid fa-hotel"></i>
+                <h2>Giriş Yap</h2>
+                <p>Oda Kontrol Sistemi</p>
+            </div>
+            <form id="loginForm">
+                <div class="input-wrapper">
+                    <label for="email">E-Posta Adresi</label>
+                    <input type="email" id="email" required autocomplete="email" placeholder="ornek@otel.com">
+                </div>
+                <div class="input-wrapper">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" required autocomplete="current-password"
+                        placeholder="********">
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top:10px;">GİRİŞ YAP</button>
+                <div class="login-footer">
+                    <a href="#" id="forgotPasswordLink" class="forgot-link">Şifremi Unuttum?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="login-overlay hidden">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                <h3>Şifre Yenileme</h3>
+                <p>E-posta adresinize kod göndereceğiz.</p>
+            </div>
+            <form id="forgotPasswordForm">
+                <div class="input-wrapper">
+                    <label for="recoveryEmail">Kayıtlı E-Posta</label>
+                    <input type="email" id="recoveryEmail" required placeholder="admin@otel.com">
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top:10px;">KOD GÖNDER</button>
+                <div class="login-footer">
+                    <a href="#" id="backToLogin" class="forgot-link">Giriş Yap'a Dön</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="login-overlay hidden">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <i class="fa-solid fa-key"></i>
+                <h3>Yeni Şifre Belirle</h3>
+                <p>Lütfen yeni şifrenizi giriniz.</p>
+            </div>
+            <form id="resetPasswordForm">
+                <div class="input-wrapper">
+                    <label for="resetCode">Onay Kodu (Simülasyon)</label>
+                    <input type="text" id="resetCode" required placeholder="Gelen Kodu Girin">
+                </div>
+                <div class="password-group" style="margin-top:10px;">
+                    <input type="password" id="newResetPass" placeholder="Yeni Şifre" required>
+                    <input type="password" id="newResetPassConfirm" placeholder="Tekrar" required>
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top:10px;">ŞİFREYİ GÜNCELLE</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (v8 for simplicity in vanilla JS) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnLLUG3UjmnmY0wF3pFcUwJDU2VrQXR78",
+            authDomain: "my-first-web-project-3437.firebaseapp.com",
+            projectId: "my-first-web-project-3437",
+            storageBucket: "my-first-web-project-3437.firebasestorage.app",
+            messagingSenderId: "405678652779",
+            appId: "1:405678652779:web:22d00a3e6913f8db5ee02e"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
+</body>
+
+</html>
