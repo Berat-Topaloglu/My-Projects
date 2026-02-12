@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Canlı İzleme ve Onarım</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+
+        .stat-badge {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .data-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .data-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f8f8f8;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .actions-panel {
+            background: #1e293b;
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        pre#logs {
+            background: #0f172a;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #334155;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-microchip"></i> Firebase Canlı İzleme</h1>
+            <div class="live-indicator">
+                <div class="pulse"></div>
+                Gerçek Zamanlı Senkronize
+            </div>
+        </div>
+
+        <div class="actions-panel">
+            <h3><i class="fa-solid fa-screwdriver-wrench"></i> Hızlı Onarım Araçları</h3>
+            <p>Database yapısını düzeltmek veya erişim sorunlarını çözmek için kullanın.</p>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="checkConnection()">
+                    <i class="fa-solid fa-network-wired"></i> Bağlantı Testi
+                </button>
+                <button class="btn-warning" onclick="repairItems()">
+                    <i class="fa-solid fa-list-check"></i> Items Koleksiyonu Onar
+                </button>
+                <button class="btn-success" onclick="resetFounder()">
+                    <i class="fa-solid fa-crown"></i> Kurucu Şifre Sıfırla
+                </button>
+                <button class="btn-danger" onclick="clearLogs()">
+                    <i class="fa-solid fa-trash-can"></i> Logları Temizle
+                </button>
+                <button class="btn-primary" onclick="window.location.href='index.html'" style="background: #475569;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Uygulamaya Dön
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Users Stat -->
+            <div class="card">
+                <h3><i class="fa-solid fa-users"></i> Kullanıcılar</h3>
+                <span class="stat-badge" id="userCount">0</span>
+                <div class="data-list" id="userList">
+                    <p style="color: #94a3b8">Yükleniyor...</p>
+                </div>
+            </div>
+
+            <!-- Items Stat -->
+            <div class="card">
+                <h3><i class="fa-solid fa-boxes-stacked"></i> Kontrol Öğeleri</h3>
+                <span class="stat-badge" id="itemCount">0</span>
+                <div class="data-list" id="itemList">
+                    <p style="color: #94a3b8">Yükleniyor...</p>
+                </div>
+            </div>
+
+            <!-- History Stat -->
+            <div class="card">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Son Kayıtlar</h3>
+                <span class="stat-badge" id="historyCount">0</span>
+                <div class="data-list" id="historyList">
+                    <p style="color: #94a3b8">Yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+
+        <h3><i class="fa-solid fa-terminal"></i> İşlem Günlüğü</h3>
+        <pre id="logs">Sistem başlatıldı, dinleme bekleniyor...</pre>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script>
+        const logsEl = document.getElementById('logs');
+
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString('tr-TR');
+            const color = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#10b981');
+            const prefix = type === 'error' ? '[HATA]' : (type === 'success' ? '[TAMAM]' : '[BİLGİ]');
+
+            const logLine = `<span style="color: #64748b">${time}</span> <span style="color: ${color}">${prefix} ${msg}</span>\n`;
+            logsEl.innerHTML = logLine + logsEl.innerHTML;
+        }
+
+        function clearLogs() {
+            logsEl.innerHTML = 'Loglar temizlendi.\n';
+        }
+
+        // Initialize Firebase
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            window.db = firebase.firestore();
+            log('Firebase bağlantısı başarılı.', 'success');
+        } catch (e) {
+            log('Firebase başlatma hatası: ' + e.message, 'error');
+        }
+
+        // REAL-TIME LISTENERS
+
+        // 1. Users Listener
+        db.collection('users').onSnapshot(snapshot => {
+            document.getElementById('userCount').textContent = snapshot.size;
+            const list = document.getElementById('userList');
+            list.innerHTML = '';
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `
+                    <span><strong>${data.username || (data.email ? data.email.split('@')[0] : 'Bilinmeyen')}</strong></span>
+                    <span style="color: #64748b">${data.role || 'staff'}</span>
+                `;
+                list.appendChild(item);
+            });
+            log(`Kullanıcı listesi senkronize edildi (${snapshot.size} kayıt)`, 'info');
+        }, err => log('Kullanıcı dinleme hatası: ' + err.message, 'error'));
+
+        // 2. Items Listener
+        db.collection('items').onSnapshot(snapshot => {
+            document.getElementById('itemCount').textContent = snapshot.size;
+            const list = document.getElementById('itemList');
+            list.innerHTML = '';
+
+            const items = snapshot.docs.map(doc => doc.data().name).sort((a, b) => a.localeCompare(b, 'tr'));
+
+            items.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `<span>${name}</span>`;
+                list.appendChild(item);
+            });
+            log(`Öğe listesi senkronize edildi (${snapshot.size} kayıt)`, 'info');
+        }, err => log('Öğe dinleme hatası: ' + err.message, 'error'));
+
+        // 3. History Listener
+        db.collection('history').orderBy('timestamp', 'desc').limit(20).onSnapshot(snapshot => {
+            document.getElementById('historyCount').textContent = snapshot.size;
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const item = document.createElement('div');
+                item.className = 'data-item';
+                item.innerHTML = `
+                    <span>Oda: ${data.roomNo}</span>
+                    <span style="color: #64748b">${data.time || ''}</span>
+                `;
+                list.appendChild(item);
+            });
+            log('Son işlemler listesi güncellendi.', 'info');
+        }, err => log('Geçmiş dinleme hatası: ' + err.message, 'error'));
+
+        // QUICK ACTIONS
+
+        async function checkConnection() {
+            try {
+                log('Ping-pong testi başlatılıyor...');
+                const testRef = db.collection('test_connection').doc('ping');
+                await testRef.set({ timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                const doc = await testRef.get();
+                if (doc.exists) log('Okuma/Yazma testi başarılı!', 'success');
+            } catch (e) {
+                log('Bağlantı testi başarısız: ' + e.message, 'error');
+            }
+        }
+
+        async function repairItems() {
+            if (!await Confirm.ask('Items koleksiyonunu varsayılan değerlerle sıfırlamak istiyor musunuz? Mevcut öğeler silinecektir.')) return;
+
+            const defaultItems = [
+                "Yatak Düzeni", "Çarşaf Değişimi", "Yastık Kılıfları",
+                "Banyo Temizliği", "Havlu Değişimi", "Tuvalet Temizliği",
+                "Zemin Temizliği", "Toz Alma", "Minibar Kontrolü",
+                "Su Isıtıcı / Bardak", "Klima Kontrolü", "Televizyon",
+                "Aydınlatma", "Oda Kontrolü", "Çöp Kovası"
+            ];
+
+            try {
+                log('Onarım başlatıldı...');
+                const batch = db.batch();
+                const snapshot = await db.collection('items').get();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+                defaultItems.forEach(name => {
+                    batch.set(db.collection('items').doc(), {
+                        name: name,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+                log('Koleksiyon başarıyla onarıldı.', 'success');
+            } catch (e) {
+                log('Onarım hatası: ' + e.message, 'error');
+            }
+        }
+
+        async function resetFounder() {
+            try {
+                log('Kurucu hesabı kontrol ediliyor...');
+                const snapshot = await db.collection('users').where('role', '==', 'founder').get();
+                const founderData = {
+                    role: 'founder',
+                    email: 'berattopaloglu61@gmail.com',
+                    password: 'Berat_6161',
+                    fullName: 'Berat Topaloğlu',
+                    username: 'kurucu',
+                    phone: '5551112233',
+                    dob: '1990-01-01',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (snapshot.empty) {
+                    await db.collection('users').add(founderData);
+                    log('Kurucu hesabı yeni oluşturuldu.', 'success');
+                } else {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, { password: 'Berat_6161', email: 'berattopaloglu61@gmail.com' });
+                    });
+                    await batch.commit();
+                    log('Kurucu şifresi sıfırlandı: Berat_6161', 'success');
+                }
+                alert('Kurucu sıfırlandı: Berat_6161');
+            } catch (e) {
+                log('Sıfırlama hatası: ' + e.message, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
