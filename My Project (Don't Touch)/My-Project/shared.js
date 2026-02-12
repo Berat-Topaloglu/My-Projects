@@ -180,39 +180,36 @@ const Loading = {
     show(message = 'Yükleniyor...') {
         if (!this.overlay) {
             this.overlay = document.createElement('div');
-            this.overlay.id = 'loading-overlay';
-            this.overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(10px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-                flex-direction: column;
-                gap: 20px;
-            `;
+            this.overlay.id = 'loading-overlay-container';
+            this.overlay.className = 'loading-overlay';
             this.overlay.innerHTML = `
-                <div class="spinner"></div>
-                <p style="color: white; font-size: 18px; font-family: 'Outfit', sans-serif;">${message}</p>
+                <div class="loading-content">
+                    <div class="modern-loader">
+                        <div class="loader-ring"></div>
+                        <div class="loader-ring"></div>
+                        <div class="loader-ring"></div>
+                    </div>
+                    <p class="loading-text">${message}</p>
+                </div>
             `;
             document.body.appendChild(this.overlay);
         }
 
-        // Mesajı güncelle (overlay zaten mevcut olsa bile)
-        const textEl = this.overlay.querySelector('p');
+        const textEl = this.overlay.querySelector('.loading-text');
         if (textEl) textEl.textContent = message;
 
         this.overlay.style.display = 'flex';
+        // Force reflow
+        this.overlay.offsetHeight;
+        this.overlay.classList.add('fade-in');
     },
 
     hide() {
         if (this.overlay) {
-            this.overlay.style.display = 'none';
+            this.overlay.classList.remove('fade-in');
+            setTimeout(() => {
+                this.overlay.style.display = 'none';
+            }, 300);
         }
     }
 };
